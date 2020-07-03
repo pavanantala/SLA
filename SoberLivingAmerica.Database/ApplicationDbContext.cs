@@ -34,7 +34,7 @@ namespace SoberLivingAmerica.Database
             modelBuilder.Entity<DynamicResult>(dynamicResult =>
             {
                 dynamicResult.HasNoKey();
-                dynamicResult.Ignore(ur => ur.Result);
+                //dynamicResult.Ignore(ur => ur.Result);
             });
 
         }
@@ -201,11 +201,9 @@ namespace SoberLivingAmerica.Database
         /// <returns>An IQueryable representing the raw SQL query</returns>
         public virtual int EntityFromSqlResult(string sql, params object[] parameters)
         {
-            //DynamicResult.FromSqlRaw
-            //RawSqlString s = $"{sql}";
-            FormattableString s = $"{CreateSqlWithParametersNewFromSqlRaw(sql,parameters)}";
-            var result = DynamicResult.FromSqlInterpolated(s);//.AsEnumerable().FirstOrDefault();
-            return 1;
+            var query = CreateSqlWithParametersNewFromSqlRaw(sql, parameters);
+            var response = DynamicResult.FromSqlRaw(query, parameters).ToList();
+            return response.FirstOrDefault().Result;
 
         }
 
@@ -224,7 +222,7 @@ namespace SoberLivingAmerica.Database
                 if (!(parameters[i] is DbParameter parameter))
                     continue;
 
-                sql = $"{sql}{(i > 0 ? "," : string.Empty)} {parameter.Value}";
+                sql = $"{sql}{(i > 0 ? "," : string.Empty)} @{parameter.ParameterName}";
 
                 //whether parameter is output
                 if (parameter.Direction == ParameterDirection.InputOutput || parameter.Direction == ParameterDirection.Output)
